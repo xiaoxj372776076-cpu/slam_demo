@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SLAM 小白视频学习计划</title>
+  <style>
+    :root { --ink:#17212b; --muted:#5f6b76; --line:#dbe3ea; --blue:#1769aa; --blue-dark:#0d3d61; --sky:#edf6fc; --amber:#e79a24; --paper:#fbfcfd; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif; color:var(--ink); background:var(--paper); line-height:1.65; }
+    main { max-width:1080px; margin:auto; padding:36px 24px 72px; }
+    .hero { border-bottom:5px solid var(--amber); padding:10px 0 28px; display:grid; grid-template-columns:1.6fr .8fr; gap:28px; align-items:end; }
+    .eyebrow { margin:0 0 8px; color:var(--blue); font-size:13px; font-weight:700; letter-spacing:1px; }
+    h1 { margin:0; font-size:38px; letter-spacing:0; line-height:1.18; color:var(--blue-dark); }
+    .subtitle { margin:12px 0 0; color:var(--muted); font-size:17px; }
+    .hero-note { padding:15px 18px; background:var(--sky); border-left:4px solid var(--blue); font-size:14px; }
+    h2 { margin:38px 0 14px; color:var(--blue-dark); font-size:24px; line-height:1.3; }
+    h3 { margin:0 0 6px; font-size:17px; color:var(--blue-dark); }
+    a { color:var(--blue); font-weight:650; text-decoration-thickness:1px; text-underline-offset:3px; }
+    .lead { max-width:800px; font-size:17px; }
+    .rule { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .rule > div { background:white; border:1px solid var(--line); border-top:3px solid var(--blue); padding:15px 17px; }
+    .rule strong { display:block; font-size:16px; color:var(--blue-dark); }
+    .rule span { display:block; color:var(--muted); font-size:14px; margin-top:4px; }
+    .sources { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .source { background:white; border:1px solid var(--line); padding:19px; }
+    .source .tag { color:var(--amber); font-weight:700; font-size:12px; letter-spacing:.8px; }
+    .source p { margin:7px 0 10px; color:var(--muted); font-size:14px; }
+    .timeline { display:grid; gap:14px; }
+    .phase { display:grid; grid-template-columns:152px 1fr; border:1px solid var(--line); background:white; }
+    .phase-label { padding:18px; background:var(--sky); border-right:1px solid var(--line); }
+    .phase-label b { display:block; color:var(--blue-dark); font-size:18px; }
+    .phase-label span { color:var(--muted); font-size:13px; }
+    .phase-body { padding:17px 20px; }
+    .phase-body p { margin:5px 0; font-size:14px; }
+    .weeks { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; }
+    .week { background:white; border:1px solid var(--line); padding:16px; min-height:215px; }
+    .week .n { color:var(--amber); font-size:13px; font-weight:800; letter-spacing:.5px; }
+    .week p { margin:6px 0; color:var(--muted); font-size:13.5px; }
+    .week strong { display:block; color:var(--blue-dark); font-size:16px; line-height:1.35; }
+    .action { color:var(--ink)!important; border-top:1px solid var(--line); padding-top:9px; margin-top:10px!important; }
+    .checklist { background:#fff8e9; border-left:4px solid var(--amber); padding:17px 20px; }
+    .checklist ul { margin:8px 0 0; padding-left:20px; }
+    .checklist li { margin:6px 0; }
+    .schedule { display:grid; grid-template-columns:130px 1fr 1fr; border:1px solid var(--line); background:white; }
+    .schedule > div { padding:12px 14px; border-bottom:1px solid var(--line); font-size:14px; }
+    .schedule .head { background:var(--blue-dark); color:white; font-weight:700; }
+    .schedule .last { border-bottom:0; }
+    footer { color:var(--muted); font-size:13px; border-top:1px solid var(--line); padding-top:18px; margin-top:36px; }
+    @media (max-width:760px) { .hero { grid-template-columns:1fr; } h1 { font-size:30px; } .rule,.sources,.weeks { grid-template-columns:1fr; } .phase { grid-template-columns:1fr; } .phase-label { border-right:0; border-bottom:1px solid var(--line); } .schedule { grid-template-columns:1fr; } .schedule .head { display:none; } .schedule > div { border-bottom:0; padding:7px 14px; } .schedule > div:nth-child(3n+1) { padding-top:15px; font-weight:700; color:var(--blue-dark); } .schedule > div:nth-child(3n) { padding-bottom:15px; border-bottom:1px solid var(--line); } }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">VIDEO-FIRST LEARNING PATH</p>
+        <h1>SLAM 小白视频学习计划</h1>
+        <p class="subtitle">16 周，从“看懂 SLAM 在做什么”到跑通一个视觉 SLAM 项目</p>
+      </div>
+      <div class="hero-note"><b>给自己的规则：</b><br>每周只追一个主线。视频看不懂时先记问题、继续往下，不要在一个公式上耗一整晚。</div>
+    </section>
+
+    <h2>先说结论</h2>
+    <p class="lead">B 站的《视觉 SLAM 十四讲》确实值得看，它是中文入门的最佳主线之一：覆盖相机、特征、位姿估计、后端优化、建图与回环，能把“SLAM 由哪些零件组成”讲完整。它不是最轻松的第一门课，所以计划里先用短视频建立直觉，再按章节慢慢看，并且每两周一定动手一次。</p>
+    <div class="rule">
+      <div><strong>每周 5 - 7 小时</strong><span>3 次各 60 - 90 分钟即可，不靠熬夜堆时长。</span></div>
+      <div><strong>70% 视频 + 30% 动手</strong><span>视频负责理解，终端和代码负责把知识落地。</span></div>
+      <div><strong>不先学完数学</strong><span>先会用，再按遇到的概念补线性代数、概率和优化。</span></div>
+    </div>
+
+    <h2>视频主线：只收藏这四组</h2>
+    <section class="sources">
+      <article class="source">
+        <div class="tag">中文主线</div>
+        <h3><a href="https://www.bilibili.com/video/BV16t411g7FR/" target="_blank" rel="noreferrer">高翔《视觉 SLAM 十四讲》</a></h3>
+        <p>优先看第 1 - 8 章对应视频。每次看 30 - 50 分钟即可，第二天用 10 分钟回顾笔记。它的好处是和《视觉 SLAM 十四讲》书、代码仓库能配套。</p>
+        <a href="https://github.com/gaoxiang12/slambook" target="_blank" rel="noreferrer">配套代码仓库：gaoxiang12/slambook</a>
+      </article>
+      <article class="source">
+        <div class="tag">英文理论主线</div>
+        <h3><a href="https://www.youtube.com/playlist?list=PLgnQpQtFTOGQrZ4O5QzbIHgl3b1JHimN_" target="_blank" rel="noreferrer">Cyrill Stachniss 的 SLAM 课程</a></h3>
+        <p>德国波恩大学教授的完整课程。比十四讲更偏概率机器人与建图，不要求一次看完；只挑计划中标出的主题看。</p>
+        <a href="https://www.ipb.uni-bonn.de/online-training-robotics/index.html" target="_blank" rel="noreferrer">课程官方索引页</a>
+      </article>
+      <article class="source">
+        <div class="tag">英文速查</div>
+        <h3><a href="https://www.ipb.uni-bonn.de/online-training-robotics/index.html" target="_blank" rel="noreferrer">5 Minutes with Cyrill</a></h3>
+        <p>适合卡住时补一个小概念：SLAM、RANSAC、ICP、SIFT、Bundle Adjustment。先看短片，再回到十四讲，不会迷路。</p>
+      </article>
+      <article class="source">
+        <div class="tag">阅读备用</div>
+        <h3><a href="https://docs.mrpt.org/reference/latest/tutorial-slam-for-beginners-the-basics.html" target="_blank" rel="noreferrer">MRPT 的 SLAM 初学者指南</a></h3>
+        <p>不是主教材。它适合在“SLAM 到底是什么”“为什么有概率滤波”这些问题上，读一篇短的英文解释。</p>
+      </article>
+    </section>
+
+    <h2>16 周路线图</h2>
+    <section class="timeline">
+      <article class="phase"><div class="phase-label"><b>第 1 阶段</b><span>第 1 - 2 周</span></div><div class="phase-body"><h3>先建立画面感</h3><p>知道传感器、前端、后端、回环、建图分别干什么。暂时不推公式。</p></div></article>
+      <article class="phase"><div class="phase-label"><b>第 2 阶段</b><span>第 3 - 6 周</span></div><div class="phase-body"><h3>视觉 SLAM 的骨架</h3><p>相机模型、特征、两视图几何、位姿估计。能读懂“相机为什么能估计运动”。</p></div></article>
+      <article class="phase"><div class="phase-label"><b>第 3 阶段</b><span>第 7 - 10 周</span></div><div class="phase-body"><h3>优化、回环与地图</h3><p>理解 BA、位姿图、回环检测；只求知道输入输出和作用，不要求手推雅可比。</p></div></article>
+      <article class="phase"><div class="phase-label"><b>第 4 阶段</b><span>第 11 - 16 周</span></div><div class="phase-body"><h3>跑通系统，再选方向</h3><p>跑 ORB-SLAM3 或 RTAB-Map 的现成示例，复盘失败原因，然后决定继续视觉、激光或 VIO。</p></div></article>
+    </section>
+
+    <h2>逐周计划</h2>
+    <section class="weeks">
+      <article class="week"><span class="n">WEEK 01</span><strong>SLAM 是什么</strong><p>视频：十四讲第 1 章；Cyrill 的 “SLAM in 5 minutes”。</p><p class="action"><b>动手：</b>画一张图，标出“传感器 - 估计位置 - 建图 - 再定位”的数据流。</p></article>
+      <article class="week"><span class="n">WEEK 02</span><strong>装好环境，只求能运行</strong><p>视频：十四讲第 2 章前半。安装 Ubuntu、Git、CMake、VS Code；不折腾 ROS。</p><p class="action"><b>动手：</b>克隆 slambook，按 README 编译第一个 example。</p></article>
+      <article class="week"><span class="n">WEEK 03</span><strong>相机如何看世界</strong><p>视频：十四讲第 3 章；补看 pinhole camera 相关片段。</p><p class="action"><b>动手：</b>用手机拍一张棋盘格；理解内参、外参各自描述什么。</p></article>
+      <article class="week"><span class="n">WEEK 04</span><strong>特征点与匹配</strong><p>视频：十四讲第 4 - 5 章。看不懂 SIFT/ORB 的细节也没关系。</p><p class="action"><b>动手：</b>跑 OpenCV ORB 特征匹配示例，观察错误匹配。</p></article>
+      <article class="week"><span class="n">WEEK 05</span><strong>两张图如何求运动</strong><p>视频：十四讲第 6 章。重点理解：匹配点 + 几何约束 = 相机相对运动。</p><p class="action"><b>动手：</b>写下 Essential Matrix、PnP、三角化各解决什么问题。</p></article>
+      <article class="week"><span class="n">WEEK 06</span><strong>前端串起来</strong><p>视频：十四讲第 7 章。只抓流程：取图 - 特征 - 匹配 - 位姿。</p><p class="action"><b>动手：</b>把第 3 - 6 周笔记压成一张 A4 流程图。</p></article>
+      <article class="week"><span class="n">WEEK 07</span><strong>为什么要优化</strong><p>视频：十四讲第 10 章前半；Cyrill 的 Bundle Adjustment 5 分钟视频。</p><p class="action"><b>动手：</b>用一句话解释 BA：让所有相机和路标点“彼此更一致”。</p></article>
+      <article class="week"><span class="n">WEEK 08</span><strong>后端与图优化</strong><p>视频：十四讲第 10 章后半；Cyrill 的 pose graph 讲解。</p><p class="action"><b>动手：</b>看一个 g2o 示例，知道顶点、边、误差分别对应什么。</p></article>
+      <article class="week"><span class="n">WEEK 09</span><strong>回环与重定位</strong><p>视频：十四讲第 11 章。重点是理解“走回旧地方时，为什么能纠正漂移”。</p><p class="action"><b>动手：</b>用生活例子解释回环：从同一地标再次确认位置。</p></article>
+      <article class="week"><span class="n">WEEK 10</span><strong>地图与稠密重建</strong><p>视频：十四讲第 12 章，了解即可。</p><p class="action"><b>动手：</b>区分稀疏地图、半稠密地图、稠密地图，各写一个用途。</p></article>
+      <article class="week"><span class="n">WEEK 11</span><strong>跑 ORB-SLAM3</strong><p>先看项目 README 和演示视频。不要一上来读源码。</p><p class="action"><b>动手：</b>跑 EuRoC 或 TUM 示例，截一张轨迹图，记录一次报错。</p></article>
+      <article class="week"><span class="n">WEEK 12</span><strong>读系统的主流程</strong><p>只读三条线：输入图像、跟踪状态、输出轨迹。</p><p class="action"><b>动手：</b>为 ORB-SLAM3 画“模块 - 作用”图，不追函数细节。</p></article>
+      <article class="week"><span class="n">WEEK 13</span><strong>认识激光 SLAM</strong><p>视频：Cyrill 的 ICP、occupancy grid 和图优化相关课程。</p><p class="action"><b>动手：</b>知道激光 SLAM 与视觉 SLAM 的输入、优缺点差别。</p></article>
+      <article class="week"><span class="n">WEEK 14</span><strong>认识 VIO / LIO</strong><p>找一支 30 分钟以内的 VIO 或 LIO 概览视频，只建立概念。</p><p class="action"><b>动手：</b>写下 IMU 为什么能补视觉或激光的短板。</p></article>
+      <article class="week"><span class="n">WEEK 15</span><strong>小项目复现</strong><p>二选一：ORB-SLAM3 跑自己的手机视频，或 RTAB-Map 跑 RGB-D 示例。</p><p class="action"><b>动手：</b>输出轨迹 / 地图截图，写 5 条实验记录。</p></article>
+      <article class="week"><span class="n">WEEK 16</span><strong>收尾与选方向</strong><p>复盘最喜欢的是视觉、激光、工程部署还是算法理论。</p><p class="action"><b>动手：</b>写一页总结：我能解释什么、能跑什么、下一步学什么。</p></article>
+    </section>
+
+    <h2>一周怎么安排最省力</h2>
+    <section class="schedule">
+      <div class="head">时间</div><div class="head">做什么</div><div class="head">完成标准</div>
+      <div>第 1 次 · 60 分钟</div><div>看本周视频的前半部分，最多做 5 条笔记。</div><div>能说出本节课要解决的问题。</div>
+      <div>第 2 次 · 60 分钟</div><div>看后半部分；卡住的公式只标记，不暂停死磕。</div><div>写出 3 个关键词和 1 个疑问。</div>
+      <div class="last">第 3 次 · 90 分钟</div><div class="last">跑一个小示例、整理流程图，或复述给朋友听。</div><div class="last">留下截图、代码输出或一页笔记。</div>
+    </section>
+
+    <h2>几个容易踩的坑</h2>
+    <section class="checklist">
+      <ul>
+        <li>不要同时追《十四讲》、Cyrill 全套、ROS、深度学习和自动驾驶。先完成一个主线。</li>
+        <li>看视频不是“开着就算学了”。每节只回答三个问题：输入是什么？输出是什么？它解决了哪个痛点？</li>
+        <li>第 11 周前不要钻源码。先把系统跑起来，源码才会变得有意义。</li>
+        <li>英语听力不是门槛。YouTube 开英文字幕，配合 0.75 倍速；听不清就只抓示意图和关键词。</li>
+        <li>数学只补需要的：旋转矩阵与四元数、最小二乘、概率分布。每次遇到再补 30 分钟。</li>
+      </ul>
+    </section>
+    <footer>资源链接已按 2026 年 8 月可访问的公开页面整理。B 站视频与 YouTube 课程的章节、字幕和地区可用性可能变化；打不开时，用页面内课程名称搜索即可。</footer>
+  </main>
+</body>
+</html>
