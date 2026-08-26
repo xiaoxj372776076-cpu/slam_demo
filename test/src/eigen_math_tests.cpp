@@ -7,6 +7,7 @@
 
 namespace {
 constexpr double kTolerance = 1e-10;
+constexpr double kPi = 3.14159265358979323846;
 
 bool nearlyEqual(double lhs, double rhs, double tolerance = kTolerance) {
   return std::abs(lhs - rhs) < tolerance;
@@ -31,9 +32,9 @@ void testMatrixOperations() {
 }
 
 void testEulerQuaternionRotation() {
-  const double yaw = M_PI / 6.0;
-  const double pitch = M_PI / 9.0;
-  const double roll = M_PI / 12.0;
+  const double yaw = kPi / 6.0;
+  const double pitch = kPi / 9.0;
+  const double roll = kPi / 12.0;
 
   Eigen::AngleAxisd yaw_angle(yaw, Eigen::Vector3d::UnitZ());
   Eigen::AngleAxisd pitch_angle(pitch, Eigen::Vector3d::UnitY());
@@ -52,7 +53,7 @@ void testEulerQuaternionRotation() {
 
 void testPoseTransform() {
   Eigen::Isometry3d transform = Eigen::Isometry3d::Identity();
-  transform.rotate(Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitZ()));
+  transform.rotate(Eigen::AngleAxisd(kPi / 2.0, Eigen::Vector3d::UnitZ()));
   transform.pretranslate(Eigen::Vector3d(1.0, 2.0, 3.0));
 
   Eigen::Vector3d point_local(1.0, 0.0, 0.0);
