@@ -16,8 +16,10 @@ add_test(NAME eigen_math_tests COMMAND eigen_math_tests)
 find_package(Pangolin QUIET)
 
 if(Pangolin_FOUND)
+  find_package(GLEW REQUIRED)
+
   add_executable(eigen_pangolin_demo src/eigen_pangolin_demo.cpp)
-  target_link_libraries(eigen_pangolin_demo Eigen3::Eigen ${Pangolin_LIBRARIES})
+  target_link_libraries(eigen_pangolin_demo Eigen3::Eigen ${Pangolin_LIBRARIES} GLEW::GLEW)
   target_include_directories(eigen_pangolin_demo PRIVATE ${Pangolin_INCLUDE_DIRS})
 else()
   message(WARNING "Pangolin was not found. eigen_math_tests will build, but eigen_pangolin_demo is skipped.")
