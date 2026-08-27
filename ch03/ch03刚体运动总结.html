@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ch03 刚体运动总结</title>
+  <style>
+    :root {
+      --ink: #20242a;
+      --muted: #66707c;
+      --line: #d9dee5;
+      --paper: #fbfbfa;
+      --panel: #ffffff;
+      --red: #9f2634;
+      --blue: #275f96;
+      --green: #16705c;
+      --amber: #a46516;
+      --violet: #6650a6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.68;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 34px 0 58px;
+    }
+
+    header {
+      border-bottom: 4px solid var(--red);
+      padding: 10px 0 24px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 34px 0 14px;
+      font-size: 24px;
+      line-height: 1.28;
+      color: #2b3340;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    p { margin: 0 0 12px; }
+
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li { margin: 5px 0; }
+
+    .lead {
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .note {
+      margin-top: 16px;
+      padding: 13px 15px;
+      border-left: 4px solid var(--blue);
+      background: #eef4fb;
+      color: #28435f;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card, .stage {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 14px;
+    }
+
+    .badge {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 700;
+      font-size: 22px;
+      background: var(--red);
+    }
+
+    .stage:nth-of-type(2) .badge { background: var(--blue); }
+    .stage:nth-of-type(3) .badge { background: var(--green); }
+    .stage:nth-of-type(4) .badge { background: var(--amber); }
+    .stage:nth-of-type(5) .badge { background: var(--violet); }
+
+    .formula-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .math {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      background: #f7f8fa;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 15px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      background: #f0f2f5;
+      font-weight: 700;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .source-list {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
+      main { width: min(100% - 24px, 1120px); padding-top: 24px; }
+      .grid, .formula-grid { grid-template-columns: 1fr; }
+      .stage { grid-template-columns: 1fr; }
+      .badge { width: 46px; height: 46px; font-size: 18px; }
+      th, td { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>第三讲：三维空间刚体运动总结</h1>
+      <p class="lead">
+        根据文件夹“ch03刚体运动”中的 7 张 PPT 截图整理。截图重点集中在旋转的不同表示：
+        欧拉角、万向锁、四元数、四元数运算、四元数与角轴的关系，以及如何用四元数旋转空间点。
+      </p>
+      <div class="note">
+        第三讲的核心问题是：如何在程序里准确、紧凑且稳定地表示相机或机器人的三维姿态与位姿。
+        SLAM 中的相机运动不仅有平移，还包含三维旋转，因此必须理解 SO(3)、SE(3) 以及常见旋转参数化方式。
+      </div>
+    </header>
+
+    <section>
+      <h2>一、刚体运动在 SLAM 中表示什么</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>刚体运动</h3>
+          <p>刚体运动描述物体在三维空间中的位置和姿态变化。对视觉 SLAM 来说，通常就是相机坐标系相对于世界坐标系的变化。</p>
+          <ul>
+            <li>平移：相机中心移动到哪里。</li>
+            <li>旋转：相机坐标轴朝向哪里。</li>
+            <li>位姿：平移和旋转合在一起，常写作 T。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>常用数学对象</h3>
+          <p>旋转矩阵、旋转向量、欧拉角和四元数都能描述旋转，但适合的场景不同。工程中常用矩阵做变换，用四元数做姿态存储和插值。</p>
+          <ul>
+            <li>SO(3)：三维旋转群，可用 3x3 旋转矩阵表示。</li>
+            <li>SE(3)：三维刚体变换群，可用 4x4 变换矩阵表示。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>二、欧拉角：直观但有奇异性</h2>
+      <article class="stage">
+        <div class="badge">1</div>
+        <div>
+          <h3>欧拉角的定义</h3>
+          <p>欧拉角把一次三维旋转分解为三次绕不同坐标轴的旋转。截图中采用常见的 Z-Y-X 顺序，也就是 yaw-pitch-roll。</p>
+          <ul>
+            <li>yaw：绕物体 z 轴旋转，称为偏航角。</li>
+            <li>pitch：绕旋转后的 y 轴旋转，称为俯仰角。</li>
+            <li>roll：绕旋转后的 x 轴旋转，称为滚转角。</li>
+          </ul>
+        </div>
+      </article>
+      <article class="stage">
+        <div class="badge">2</div>
+        <div>
+          <h3>固定轴与动轴</h3>
+          <p>欧拉角的轴可以定义为固定轴或动轴，旋转顺序也可以不同。因此同样三个数，在不同定义下可能表示不同姿态。</p>
+          <p>这也是使用欧拉角时容易出错的地方：必须明确旋转顺序、角度单位和坐标系约定。</p>
+        </div>
+      </article>
+      <article class="stage">
+        <div class="badge">3</div>
+        <div>
+          <h3>万向锁</h3>
+          <p>在 Z-Y-X 顺序中，如果 pitch 等于正负 90 度，第一次旋转和第三次旋转会绕到同一个轴上，系统失去一个自由度。</p>
+          <p>这就是万向锁。它说明欧拉角虽然直观，但不适合直接作为全局优化或连续姿态更新的主要表示。</p>
+        </div>
+      </article>
+    </section>
+
+    <section>
+      <h2>三、四元数：紧凑、稳定、适合表示旋转</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>从复数到四元数</h3>
+          <p>截图把四元数类比为复数的扩展：单位圆上的复数可以表示二维旋转，单位四元数可以表示三维空间中的旋转。</p>
+          <div class="math">q = q0 + q1 i + q2 j + q3 k</div>
+          <p>也常写成实部和虚部的形式：</p>
+          <div class="math">q = [s, v], s = q0, v = [q1, q2, q3]^T</div>
+        </article>
+        <article class="card">
+          <h3>虚部乘法规则</h3>
+          <p>四元数有三个虚部 i、j、k。它们和自身相乘像复数，和彼此相乘像叉乘，因此乘法不满足交换律。</p>
+          <div class="math">i^2 = j^2 = k^2 = -1</div>
+          <div class="math">ij = k, ji = -k; jk = i, kj = -i; ki = j, ik = -j</div>
+        </article>
+      </div>
+
+      <h2>四、四元数的常见运算</h2>
+      <div class="formula-grid">
+        <div class="math">加法：qa ± qb = [sa ± sb, va ± vb]</div>
+        <div class="math">模长：||q|| = sqrt(s^2 + x^2 + y^2 + z^2)</div>
+        <div class="math">共轭：q* = [s, -v]</div>
+        <div class="math">逆：q^-1 = q* / ||q||^2</div>
+        <div class="math">数乘：kq = [ks, kv]</div>
+        <div class="math">点乘：qa · qb = sa sb + xa xb + ya yb + za zb</div>
+      </div>
+      <div class="note">
+        单位四元数的模长为 1，此时逆等于共轭。表示旋转时通常要求四元数归一化，否则连续计算中会逐渐偏离合法旋转。
+      </div>
+    </section>
+
+    <section>
+      <h2>五、四元数与角轴</h2>
+      <p>如果一个旋转可以表示为绕单位轴 n = [nx, ny, nz]^T 旋转角度 θ，那么对应的单位四元数为：</p>
+      <div class="math">q = [cos(θ/2), nx sin(θ/2), ny sin(θ/2), nz sin(θ/2)]^T</div>
+      <p>反过来，也可以从四元数恢复角轴：</p>
+      <div class="formula-grid">
+        <div class="math">θ = 2 arccos(q0)</div>
+        <div class="math">[nx, ny, nz]^T = [q1, q2, q3]^T / sin(θ/2)</div>
+      </div>
+      <p>这说明四元数、旋转矩阵和欧拉角之间可以互相转换。实际开发时，经常用四元数保存姿态，用旋转矩阵参与点坐标变换，用欧拉角输出给人看。</p>
+    </section>
+
+    <section>
+      <h2>六、用四元数旋转空间点</h2>
+      <p>空间点 p = [x, y, z]^T 不能直接和四元数相乘，需要先写成虚四元数：</p>
+      <div class="math">p = [0, x, y, z] = [0, v]</div>
+      <p>若单位四元数 q 表示一次旋转，则旋转后的点为：</p>
+      <div class="math">p' = q p q^-1</div>
+      <p>这条公式与旋转矩阵作用在向量上的效果一致。截图中也强调：可以验证 p' 仍然是虚四元数，也就是实部为 0。</p>
+    </section>
+
+    <section>
+      <h2>七、几种表示方法对比</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>表示方式</th>
+            <th>维度/参数</th>
+            <th>优点</th>
+            <th>问题</th>
+            <th>常见用途</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>旋转矩阵</td>
+            <td>9 个数</td>
+            <td>直接作用于向量，组合旋转方便</td>
+            <td>有正交约束和行列式约束，参数冗余</td>
+            <td>坐标变换、投影模型、矩阵推导</td>
+          </tr>
+          <tr>
+            <td>欧拉角</td>
+            <td>3 个角</td>
+            <td>直观，方便描述 yaw-pitch-roll</td>
+            <td>依赖旋转顺序，存在万向锁</td>
+            <td>日志输出、人机理解、姿态显示</td>
+          </tr>
+          <tr>
+            <td>四元数</td>
+            <td>4 个数</td>
+            <td>紧凑、无奇异性、适合插值和连续更新</td>
+            <td>不够直观，需要归一化，q 与 -q 表示同一旋转</td>
+            <td>SLAM/机器人姿态存储、优化初值、轨迹文件</td>
+          </tr>
+          <tr>
+            <td>角轴/旋转向量</td>
+            <td>3 个数</td>
+            <td>最小参数，和李代数关系紧密</td>
+            <td>角度接近 0 或 π 时要小心数值问题</td>
+            <td>非线性优化中的局部扰动、Sophus/g2o/Ceres</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>八、学习第三讲时要抓住的主线</h2>
+      <ul>
+        <li>旋转不是普通三维向量，不能直接相加相减来更新姿态。</li>
+        <li>欧拉角适合理解姿态，但由于万向锁，不适合作为主要计算表示。</li>
+        <li>单位四元数可以表示三维旋转，且比旋转矩阵更紧凑。</li>
+        <li>点旋转公式 p' = q p q^-1 是理解四元数几何意义的关键。</li>
+        <li>在代码中，要明确坐标系方向、旋转顺序、四元数分量顺序和单位约定。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>截图内容依据</h2>
+      <p class="source-list">
+        已读取图片：20260827-210837.jpg、20260827-210842.jpg、20260827-210846.jpg、
+        20260827-210851.jpg、20260827-210855.jpg、20260827-210900.jpg、20260827-210904.jpg。
+      </p>
+    </section>
+  </main>
+</body>
+</html>
