@@ -1,5 +1,7 @@
 # ch07 视觉里程计 1：ORB-SLAM3 RGB-D 实验
 
+本讲概念总结：[ch07 视觉里程计 1 总结（PDF）](ch07视觉里程计1总结.pdf)。它结合课堂图片、个人笔记与本目录实验，梳理 ORB、对极几何、五点法/八点法和三角化。
+
 这个 demo 使用 **官方 ORB-SLAM3 的 RGB-D 模式**在 TUM RGB-D `freiburg1_xyz` 上估计相机位置，并从该序列的 RGB 帧生成可播放视频。输出包括逐帧跟踪状态、TUM 格式轨迹、CSV 位置、轨迹与真值对比图、两张 ORB 匹配诊断图，以及一个本地网页总览。
 
 `fr1/xyz` 约 30 秒，运动主要沿 x/y/z 轴，适合作为入门轨迹；RGB-D 提供米制尺度。数据来源：[TUM RGB-D 官方下载页](https://cvg.cit.tum.de/data/datasets/rgbd-dataset/download)、[格式说明](https://cvg.cit.tum.de/data/datasets/rgbd-dataset/file_formats)。算法源码来自 [UZ-SLAMLab/ORB_SLAM3](https://github.com/UZ-SLAMLab/ORB_SLAM3)。数据包约 0.47 GB，**不纳入仓库**。
@@ -56,6 +58,8 @@ python3 -m venv /path/to/ch07-venv
 | `summary.json` | 帧数、匹配数和 ATE RMSE 等摘要 |
 
 两张匹配图由**独立的 OpenCV ORB + Hamming 比值筛选 + RANSAC**计算，方便观察图像特征；它们并非 ORB-SLAM3 内部关联结果的导出。轨迹采用 ORB-SLAM3 的真实运行输出，不由匹配图推算。绘图对估计轨迹和真值做了仅旋转、平移的 SE(3) 对齐，**未缩放**；ATE RMSE 是对齐后的平移误差，不代表无初值或其他序列下的算法精度。
+
+`rgb_preview.mp4` 只包含 RGB 图像，不带相机内参。运行脚本使用 ORB-SLAM3 的 `Examples/RGB-D/TUM1.yaml` 配置相机模型，并与 TUM 深度图配合运行；因此这是 **RGB-D** 实验，不是仅凭该视频运行的单目实验。
 
 首次加载 ORB 词袋可能耗时数十秒。运行时 GUI 关闭，适合无显示器的环境。`run_demo.py --help` 可查看自定义输出路径等参数。
 
