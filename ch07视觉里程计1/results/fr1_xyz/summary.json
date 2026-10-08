@@ -1,0 +1,35 @@
+{
+  "trajectory_poses": 798,
+  "ate_rmse_m": 0.010206144573539026,
+  "matched_ground_truth_poses": 796,
+  "dataset": "TUM freiburg1_xyz",
+  "total_frames": 798,
+  "tracked_frames": 798,
+  "orb_matches_early": {
+    "frame_indices": [
+      79,
+      87
+    ],
+    "keypoints": [
+      1600,
+      1600
+    ],
+    "ratio_test_matches": 670,
+    "ransac_inliers": 527,
+    "shown": 80
+  },
+  "orb_matches_late": {
+    "frame_indices": [
+      558,
+      566
+    ],
+    "keypoints": [
+      1600,
+      1600
+    ],
+    "ratio_test_matches": 512,
+    "ransac_inliers": 416,
+    "shown": 80
+  },
+  "video_fps": 29.993911851754724
+}
