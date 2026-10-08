@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ORB-SLAM3 · TUM fr1/xyz</title>
+<style>body{font:16px system-ui;background:#101720;color:#e8eef3;margin:0 auto;max-width:1200px;padding:24px}
+h1{margin-bottom:4px}p{color:#b6c5d1}.cards{display:flex;gap:12px;flex-wrap:wrap}
+.card{background:#202d39;padding:12px 18px;border-radius:10px}.card strong{display:block;font-size:22px}
+img,video{max-width:100%;border-radius:10px;background:white}section{margin:25px 0}
+</style><h1>ORB-SLAM3 · 视觉里程计</h1><p>TUM RGB-D freiburg1_xyz · RGB-D 模式 · 真正的 ORB-SLAM3 轨迹</p>
+<div class="cards"><div class="card">轨迹位姿<strong>798</strong></div>
+<div class="card">跟踪帧数<strong>798/798</strong></div>
+<div class="card">SE(3) 对齐后 ATE RMSE<strong>0.010 m</strong></div></div>
+<section><h2>输入视频</h2><video controls muted playsinline src="rgb_preview.mp4"></video></section>
+<section><h2>相机位置估计</h2><img src="trajectory.png" alt="相机轨迹和真值对比"></section>
+<section><h2>ORB 特征匹配：前段</h2><img src="orb_matches_early.png" alt="前段图像对的 ORB 匹配"></section>
+<section><h2>ORB 特征匹配：后段</h2><img src="orb_matches_late.png" alt="后段图像对的 ORB 匹配"></section>
+<p>匹配图由独立 OpenCV ORB + Hamming 距离 + 比值筛选 + RANSAC 生成，用于可视化；它们不是 ORB-SLAM3 内部逐帧匹配的导出结果。</p>
+<p>输入数据和衍生图像：TUM RGB-D Benchmark / J. Sturm 等，<a href="https://cvg.cit.tum.de/data/datasets/rgbd-dataset">CC BY 4.0</a>。</p>
+</html>
