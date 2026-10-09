@@ -11,12 +11,13 @@
 | ch04 李群与李代数 | 待整理 |
 | [ch05 相机与图像](ch05相机与图像/ch05相机与图像总结.pdf) | 相机模型、成像与深度获取 |
 | [ch06 非线性优化](ch06非线性优化/ch06非线性优化总结.pdf) | 残差、最小二乘、GN/LM 与 SLAM 后端 |
-| [ch07 视觉里程计 1](ch07视觉里程计1/ch07视觉里程计1总结.pdf) | ORB 特征、2D–2D 对极几何与三角化；[ORB-SLAM3 RGB-D 实验](ch07视觉里程计1/README.md) |
-| [ch07 视觉里程计 2](ch07视觉里程计2/ch07视觉里程计2总结.pdf) | 3D-2D PnP、重投影误差与 BA、3D-3D ICP；[本章说明](ch07视觉里程计2/README.md) |
-| ch08、ch10 | 待整理 |
+| [ch07-1 视觉里程计](ch07-1视觉里程计/ch07视觉里程计1总结.pdf) | ORB 特征、2D–2D 对极几何与三角化；[ORB-SLAM3 RGB-D 实验](ch07-1视觉里程计/README.md) |
+| [ch07-2 视觉里程计](ch07-2视觉里程计/ch07视觉里程计2总结.pdf) | 3D-2D PnP、重投影误差与 BA、3D-3D ICP；[本章说明](ch07-2视觉里程计/README.md) |
+| [ch08 视觉里程计（2）](ch08视觉里程计（2）/) | 待整理 |
+| ch10 | 待整理 |
 
 ## ch07 实验速览
 
-`ch07视觉里程计1/` 包含在 TUM RGB-D `freiburg1_xyz` 上运行 ORB-SLAM3 的无界面驱动、运行脚本和轨迹/ORB 匹配可视化。先阅读[实验说明](ch07视觉里程计1/README.md)；数据和 ORB-SLAM3 本体需另行获取。`rgb_preview.mp4` 只是 RGB 帧视频，相机内参由运行时的 `Examples/RGB-D/TUM1.yaml` 提供，并不嵌在视频中。
+`ch07-1视觉里程计/` 包含在 TUM RGB-D `freiburg1_xyz` 上运行 ORB-SLAM3 的无界面驱动、运行脚本和轨迹/ORB 匹配可视化。先阅读[实验说明](ch07-1视觉里程计/README.md)；数据和 ORB-SLAM3 本体需另行获取。`rgb_preview.mp4` 只是 RGB 帧视频，相机内参由运行时的 `Examples/RGB-D/TUM1.yaml` 提供，并不嵌在视频中。
 
 本仓库用于学习和练习，内容会随进度更新。

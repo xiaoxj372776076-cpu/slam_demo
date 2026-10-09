@@ -1,4 +1,4 @@
-# ch07 视觉里程计 1：ORB-SLAM3 RGB-D 实验
+# ch07-1 视觉里程计：ORB-SLAM3 RGB-D 实验
 
 本讲概念总结：[ch07 视觉里程计 1 总结（PDF）](ch07视觉里程计1总结.pdf)。它结合课堂图片、个人笔记与本目录实验，梳理 ORB、对极几何、五点法/八点法和三角化。
 
@@ -23,7 +23,7 @@ tar -xzf /path/to/rgbd_dataset_freiburg1_xyz.tgz -C /path/to
 编译驱动。若依赖不在系统默认搜索路径，设置 `CMAKE_PREFIX_PATH` 或 `OpenCV_DIR`：
 
 ```bash
-cmake -S 'ch07视觉里程计1' -B /path/to/ch07-build \
+cmake -S 'ch07-1视觉里程计' -B /path/to/ch07-build \
   -DORB_SLAM3_ROOT=/path/to/ORB_SLAM3 \
   -DCMAKE_PREFIX_PATH='/path/to/opencv/install;/path/to/pangolin/install'
 cmake --build /path/to/ch07-build -j 4
@@ -33,19 +33,19 @@ cmake --build /path/to/ch07-build -j 4
 
 ```bash
 python3 -m venv /path/to/ch07-venv
-/path/to/ch07-venv/bin/pip install -r 'ch07视觉里程计1/requirements.txt'
+/path/to/ch07-venv/bin/pip install -r 'ch07-1视觉里程计/requirements.txt'
 ```
 
 ## 运行
 
 ```bash
-/path/to/ch07-venv/bin/python 'ch07视觉里程计1/run_demo.py' \
+/path/to/ch07-venv/bin/python 'ch07-1视觉里程计/run_demo.py' \
   --dataset /path/to/rgbd_dataset_freiburg1_xyz \
   --orb-root /path/to/ORB_SLAM3 \
   --binary /path/to/ch07-build/rgbd_tum_headless
 ```
 
-默认输出在 `ch07视觉里程计1/results/fr1_xyz/`。浏览器打开其中 `index.html`，或分别查看：
+默认输出在 `ch07-1视觉里程计/results/fr1_xyz/`。浏览器打开其中 `index.html`，或分别查看：
 
 | 文件 | 内容 |
 | --- | --- |
