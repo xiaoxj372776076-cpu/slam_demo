@@ -1,4 +1,6 @@
-# ch08 视觉里程计（2）：学习总结与行车 demo
+# ch08 后端
+
+目录按学习规划改名为 `ch08后端`；现有总结与行车 demo 仍保留视觉里程计（2）的内容，本次仅调整目录名称和路径引用。
 
 [阅读本章总结 PDF](ch08视觉里程计（2）总结.pdf)
 
@@ -26,7 +28,7 @@
 
 ```bash
 python3 -m pip install reportlab
-python3 'ch08视觉里程计（2）/generate_summary_pdf.py'
+python3 'ch08后端/generate_summary_pdf.py'
 ```
 
 默认使用 macOS 的 Arial Unicode 字体；其他环境传入 `--font /path/to/chinese-font.ttf`，也可用 `--output /path/to/summary.pdf` 指定输出。
@@ -45,8 +47,8 @@ python3 'ch08视觉里程计（2）/generate_summary_pdf.py'
 
 ```bash
 python3 -m venv /path/to/lk-venv
-/path/to/lk-venv/bin/pip install -r 'ch08视觉里程计（2）/requirements.txt'
-/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/run_lk_demo.py' --download-demo
+/path/to/lk-venv/bin/pip install -r 'ch08后端/requirements.txt'
+/path/to/lk-venv/bin/python 'ch08后端/run_lk_demo.py' --download-demo
 ```
 
 `--download-demo` 获取 Udacity 官方课程仓库的 `solidWhiteRight.mp4`。固定来源提交和 SHA-256 校验记录在[来源说明](THIRD_PARTY_NOTICES.md)，默认视频缓存为 `.cache/solidWhiteRight.mp4`。不使用 KITTI 下载登录，也不需要下载完整数据集。
@@ -54,7 +56,7 @@ python3 -m venv /path/to/lk-venv
 也可处理自己的恒定帧率视频：
 
 ```bash
-/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/run_lk_demo.py' \
+/path/to/lk-venv/bin/python 'ch08后端/run_lk_demo.py' \
   --video /path/to/driving.mp4 \
   --output /path/to/lk-results \
   --max-frames 300 --max-points 180 --trail-frames 35 --fb-threshold 1.0
@@ -67,7 +69,7 @@ python3 -m venv /path/to/lk-venv
 运行后，浏览器打开 `results/driving_lk/index.html`，或通过本机服务预览：
 
 ```bash
-/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/serve_results.py'
+/path/to/lk-venv/bin/python 'ch08后端/serve_results.py'
 ```
 
 访问 `http://127.0.0.1:8769`。预览服务只绑定本机，并支持 HTTP Range 读取，便于视频进度跳转。网页可慢放视频、选择六条代表性长寿命轨迹、查看 x/y 像素坐标随时间变化，并跳到该点出现的时刻。
@@ -103,7 +105,7 @@ LK 输出图像上的二维运动，包含相机自运动、周围车辆运动�
 ## 验证
 
 ```bash
-cd 'ch08视觉里程计（2）'
+cd 'ch08后端'
 /path/to/lk-venv/bin/python -m unittest -v test_lk_demo.py
 ```
 
@@ -118,15 +120,15 @@ cd 'ch08视觉里程计（2）'
 复用上面的依赖、`ffmpeg` 和 `.cache/solidWhiteRight.mp4`；不需要额外权重。仓库根目录运行：
 
 ```bash
-/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/run_direct_demo.py' --download-demo
-/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/serve_results.py' \
-  --directory 'ch08视觉里程计（2）/results/driving_direct' --port 8770
+/path/to/lk-venv/bin/python 'ch08后端/run_direct_demo.py' --download-demo
+/path/to/lk-venv/bin/python 'ch08后端/serve_results.py' \
+  --directory 'ch08后端/results/driving_direct' --port 8770
 ```
 
 打开 `http://127.0.0.1:8770`，可慢放对比视频、切换代表道路探针、查看图像平面轨迹与 x/y 时间曲线、跳到该点起始时刻。输出在 `results/driving_direct/`，同样不纳入 Git。使用自己的恒定帧率视频时传入 `--video /path/to/video.mp4`，但必须检查/调整 `direct_alignment.py` 中的人工道路 ROI，不能直接把此道路模型用于任意视频。
 
 ```bash
-/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/run_direct_demo.py' \
+/path/to/lk-venv/bin/python 'ch08后端/run_direct_demo.py' \
   --video /path/to/driving.mp4 --output /path/to/direct-results \
   --max-frames 300 --max-width 960 --max-points 100
 ```
@@ -181,7 +183,7 @@ LK 和直接对齐都可以基于亮度残差与局部线性化，不能仅靠�
 ### 验证
 
 ```bash
-cd 'ch08视觉里程计（2）'
+cd 'ch08后端'
 /path/to/lk-venv/bin/python -m unittest -v test_lk_demo.py test_direct_demo.py
 ```
 
