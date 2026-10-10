@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LK 光流 · 行车像素轨迹</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1422;--panel:#142236;--text:#e8f1fc;--muted:#acbdd3;--line:#31465f;--accent:#72dcda}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,sans-serif}main{max-width:1280px;margin:auto;padding:36px 24px 60px}h1{font-size:32px;margin:4px 0 10px}h2{font-size:21px;margin:0 0 14px}.eyebrow{color:var(--accent);letter-spacing:.15em;font-size:13px}.muted{color:var(--muted)}.metrics{display:flex;gap:30px;flex-wrap:wrap;margin:24px 0}.metric span{display:block;color:var(--muted);font-size:13px}.metric strong{font-size:23px;font-weight:500}section{margin:24px 0;padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}video,img{width:100%;display:block;border-radius:6px}video{background:#000}.control{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0}select,button{padding:8px 12px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:6px;font:inherit}button{cursor:pointer}a{color:var(--accent)}svg{width:100%;height:auto;display:block}.plots{display:grid;grid-template-columns:1fr 1fr;gap:20px}.detail{color:var(--muted);font-size:14px}code{font-size:14px}@media(max-width:720px){main{padding:24px 12px}.plots{grid-template-columns:1fr}section{padding:14px}h1{font-size:26px}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">CH08 / SPARSE PYRAMIDAL LUCAS-KANADE</div>
+<h1>沿着像素，看一段行车过程</h1>
+<p class="muted">左边为原始图像，右边叠加稀疏 LK 跟踪轨迹。颜色随点的 ID 保持一致，圆点是当前位置，尾迹显示最近 35 帧。</p>
+<div class="metrics" id="metrics"></div>
+<section><h2>原片与光流 · 同步对比</h2>
+<video id="video" controls playsinline preload="metadata" poster="preview.jpg" src="lk_tracks.mp4" aria-label="原始行车图像与 LK 光流轨迹并排对比">浏览器不支持视频，请打开 lk_tracks.mp4。</video>
+<div class="control"><label for="speed">播放速度</label><select id="speed"><option value=".25">0.25×</option><option value=".5">0.5×</option><option value="1" selected>1×</option></select><span class="detail">建议慢放观察车道线、路面纹理和前车上的点。</span></div></section>
+<section><h2>同一个点，连续去了哪里？</h2>
+<div class="control"><label for="track">选择长寿命像素点</label><select id="track"></select><button id="seek" type="button">跳到该点起始时刻</button></div>
+<p class="detail" id="detail"></p><div class="plots"><svg id="xy" viewBox="0 0 560 350" role="img" aria-label="选中点的图像平面轨迹，横轴 x 像素，纵轴 y 像素向下"></svg><svg id="time" viewBox="0 0 560 350" role="img" aria-label="选中点的 x 和 y 坐标随时间变化"></svg></div>
+<p class="detail">空心圆：轨迹起点；实心圆：终点。坐标来自跟踪用的缩放图像。失效点终止，后续补点使用新的 ID，不连接成同一条轨迹。</p></section>
+<section><h2>几个时刻的轨迹快照</h2><img src="contact_sheet.jpg" alt="行车视频四个时刻的原图与 LK 轨迹并排快照"></section>
+<section><h2>这些线能说明什么？</h2><p>它们是图像平面的二维像素运动，由相机运动、物体运动和透视共同产生。<strong>不是车辆的三维位置，也不是语义目标检测。</strong>光流不需要相机内参；若进一步求相机位姿，还需几何模型、标定及尺度约束。</p><p class="detail" id="filter"></p><p><a href="observations.csv">逐帧观测 CSV</a> · <a href="summary.json">实验参数与摘要</a> · <a href="trajectories.svg">六条代表轨迹</a> · <a href="https://github.com/udacity/CarND-LaneLines-P1">视频来源：Udacity</a> · <a href="https://docs.opencv.org/4.x/d4/dee/tutorial_optical_flow.html">LK 官方说明</a></p></section>
+</main>
+<script id="data" type="application/json">__SUMMARY_JSON__</script>
+<script>
+const s=JSON.parse(document.getElementById('data').textContent), video=document.getElementById('video'), picker=document.getElementById('track');
+const fmt=v=>Number(v).toFixed(2);
+document.getElementById('metrics').innerHTML=[['视频长度',fmt(s.duration_s)+' s'],['处理帧数',s.frames],['帧率',s.fps+' FPS'],['平均活跃点数',fmt(s.mean_active_points)],['跟踪分辨率',s.tracking_size.join(' × ')]].map(([k,v])=>`<div class="metric"><span>${k}</span><strong>${v}</strong></div>`).join('');
+document.getElementById('speed').onchange=e=>video.playbackRate=Number(e.target.value);
+document.getElementById('filter').textContent=`过滤：前后向误差 ≤ ${s.parameters.fb_threshold} px，LK 窗口误差 ≤ ${s.parameters.max_lk_error}；每 ${s.parameters.detect_interval} 帧补点。时间轴使用 frame / FPS，适用于此恒定帧率片段。共建立 ${s.total_track_ids} 个独立 ID。`;
+document.querySelector('main > p').textContent=`左边为原始图像，右边叠加稀疏 LK 跟踪轨迹。颜色随点的 ID 保持一致，圆点是当前位置，尾迹显示最近 ${s.parameters.trail_frames} 帧。`;
+for(const ex of s.examples){const o=document.createElement('option');o.value=ex.id;o.textContent=`ID ${ex.id} · ${ex.points.length} 帧`;picker.append(o)}
+if(s.examples.length){const displacement=ex=>{const a=ex.points[0],b=ex.points[ex.points.length-1];return Math.hypot(b[1]-a[1],b[2]-a[2])};picker.value=String(s.examples.reduce((a,b)=>displacement(a)>displacement(b)?a:b).id)}
+function chart(el,series,xmax,ymax,invertY,xlabel,ylabel){
+ const W=560,H=350,L=62,R=20,T=24,B=49,w=W-L-R,h=H-T-B,x=v=>L+v/xmax*w,y=v=>invertY?T+v/ymax*h:T+(1-v/ymax)*h;
+ let out=`<rect x="${L}" y="${T}" width="${w}" height="${h}" fill="none" stroke="#536983"/>`;
+ for(let i=0;i<=4;i++){let xv=xmax*i/4,yv=ymax*i/4;out+=`<text x="${x(xv)}" y="${H-25}" text-anchor="middle" fill="#c5d4e7" font-size="12">${xv.toFixed(xmax<20?1:0)}</text><text x="${L-10}" y="${y(yv)+4}" text-anchor="end" fill="#c5d4e7" font-size="12">${yv.toFixed(0)}</text>`}
+ out+=`<text x="${L+w/2}" y="${H-5}" text-anchor="middle" fill="#e8f1fc" font-size="13">${xlabel}</text><text x="18" y="${T+h/2}" transform="rotate(-90 18 ${T+h/2})" text-anchor="middle" fill="#e8f1fc" font-size="13">${ylabel}</text>`;
+ for(const a of series){let coords=a.data.map(([u,v])=>`${x(u)},${y(v)}`).join(' '),first=a.data[0],last=a.data[a.data.length-1];out+=`<polyline points="${coords}" fill="none" stroke="${a.color}" stroke-width="2.5"/><circle cx="${x(first[0])}" cy="${y(first[1])}" r="5" fill="#142236" stroke="${a.color}" stroke-width="2"/><circle cx="${x(last[0])}" cy="${y(last[1])}" r="4" fill="${a.color}"/>`}
+ el.innerHTML=out;
+}
+function draw(){const ex=s.examples.find(ex=>ex.id===Number(picker.value));if(!ex){document.getElementById('detail').textContent='视频中没有足够稳定的轨迹。';document.getElementById('seek').disabled=true;return}const p=ex.points,first=p[0],last=p[p.length-1];document.getElementById('detail').textContent=`ID ${ex.id} · ${fmt(first[0]/s.fps)}–${fmt(last[0]/s.fps)} s · 起点 (${fmt(first[1])}, ${fmt(first[2])}) px → 终点 (${fmt(last[1])}, ${fmt(last[2])}) px`;
+ chart(document.getElementById('xy'),[{color:ex.color,data:p.map(a=>[a[1],a[2]])}],s.tracking_size[0],s.tracking_size[1],true,'x (px) →','y (px) ↓');
+ chart(document.getElementById('time'),[{color:'#72dcda',data:p.map(a=>[a[0]/s.fps,a[1]])},{color:'#f4ba6e',data:p.map(a=>[a[0]/s.fps,a[2]])}],s.duration_s,Math.max(...s.tracking_size),false,'time (s) · cyan: x, orange: y','coordinate (px)');
+}
+picker.onchange=draw;document.getElementById('seek').onclick=()=>{const ex=s.examples.find(ex=>ex.id===Number(picker.value));if(ex)video.currentTime=ex.points[0][0]/s.fps};draw();
+</script></body></html>
