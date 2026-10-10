@@ -142,11 +142,13 @@ def color(track_id):
     return tuple(map(int, cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)[0, 0]))
 
 
-def render(frame, tracker, number, fps):
+def render(frame, tracker, number, fps, label="PYRAMIDAL LK"):
     overlay = frame.copy()
     for track_id, xy in tracker.active.items():
         history = tracker.history[track_id]
         if len(history) < 3:
+            if getattr(tracker, "show_new_probes", False):
+                cv2.circle(overlay, tuple(np.rint(xy).astype(int)), 3, color(track_id), 1, cv2.LINE_AA)
             continue
         recent = [(x, y) for f, x, y in history if f > number - tracker.config.trail_frames]
         if len(recent) > 1:
@@ -158,17 +160,19 @@ def render(frame, tracker, number, fps):
     canvas[54:, :width] = frame
     canvas[54:, width:] = overlay
     cv2.putText(canvas, "ORIGINAL  |  Udacity driving clip", (16, 34), cv2.FONT_HERSHEY_SIMPLEX, .65, (235, 235, 235), 1, cv2.LINE_AA)
-    label = f"PYRAMIDAL LK  |  t={number/fps:.2f}s  |  active={len(tracker.active)}  |  trail={tracker.config.trail_frames}f"
+    label = f"{label}  |  t={number/fps:.2f}s  |  active={len(tracker.active)}  |  trail={tracker.config.trail_frames}f"
     cv2.putText(canvas, label, (width + 16, 34), cv2.FONT_HERSHEY_SIMPLEX, .65, (235, 235, 235), 1, cv2.LINE_AA)
     return canvas
 
 
-def run(video, output, config, max_frames=0, max_width=960, overwrite=False):
+def run(video, output, config, max_frames=0, max_width=960, overwrite=False, *,
+        tracker_class=Tracker, label="PYRAMIDAL LK", movie_name="lk_tracks.mp4",
+        report_template=None, error_column="lk_patch_error"):
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise RuntimeError("ffmpeg is required for browser-compatible H.264 output")
     output = Path(output)
-    names = ["lk_tracks.mp4", "observations.csv", "summary.json", "index.html", "preview.jpg", "contact_sheet.jpg", "trajectories.svg"]
+    names = [movie_name, "observations.csv", "summary.json", "index.html", "preview.jpg", "contact_sheet.jpg", "trajectories.svg"]
     if not overwrite and any((output / name).exists() for name in names):
         raise FileExistsError("Outputs already exist. Choose another --output or pass --overwrite.")
     capture = cv2.VideoCapture(str(video))
@@ -189,9 +193,10 @@ def run(video, output, config, max_frames=0, max_width=960, overwrite=False):
     writer = subprocess.Popen([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-f", "rawvideo",
         "-pix_fmt", "bgr24", "-s", f"{2*width}x{height+54}", "-r", str(fps), "-i", "-", "-an",
         "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        str(output / "lk_tracks.mp4")], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    tracker = Tracker(config)
+        str(output / movie_name)], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    tracker = tracker_class(config)
     snapshots = []
+    best_preview, best_score = None, -1.
     active_counts = []
     fb_errors = []
     frame_number = 0
@@ -199,7 +204,7 @@ def run(video, output, config, max_frames=0, max_width=960, overwrite=False):
     try:
         with (output / "observations.csv").open("w", newline="", encoding="utf-8") as stream:
             csv_writer = csv.writer(stream)
-            csv_writer.writerow(["frame", "time_s", "track_id", "x_px", "y_px", "dx_px", "dy_px", "fb_error_px", "lk_patch_error", "is_new"])
+            csv_writer.writerow(["frame", "time_s", "track_id", "x_px", "y_px", "dx_px", "dy_px", "fb_error_px", error_column, "is_new"])
             while ok and (not max_frames or frame_number < max_frames):
                 frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
                 rows = tracker.update(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), frame_number)
@@ -209,8 +214,19 @@ def run(video, output, config, max_frames=0, max_width=960, overwrite=False):
                     if not new:
                         fb_errors.append(fb)
                 active_counts.append(len(tracker.active))
-                canvas = render(frame, tracker, frame_number, fps)
+                canvas = render(frame, tracker, frame_number, fps, label)
                 writer.stdin.write(canvas.tobytes())
+                if getattr(tracker, "prefer_trajectory_preview", False):
+                    score = 0.
+                    for track_id in tracker.active:
+                        points = tracker.history[track_id]
+                        if len(points) >= 3:
+                            start = points[max(0, len(points)-config.trail_frames)]
+                            end = points[-1]
+                            score += math.hypot(end[1]-start[1], end[2]-start[2])
+                    if score > best_score:
+                        best_score = score
+                        best_preview = (frame_number, cv2.resize(canvas, (960, round(canvas.shape[0]*960/canvas.shape[1]))))
                 if frame_number % max(1, round(fps * 2)) == 0:
                     snapshots.append((frame_number, cv2.resize(canvas, (960, round(canvas.shape[0] * 960 / canvas.shape[1])))))
                 frame_number += 1
@@ -225,10 +241,13 @@ def run(video, output, config, max_frames=0, max_width=960, overwrite=False):
     if not complete or return_code:
         raise RuntimeError(f"Video encoding failed: {encoding_errors}")
     if frame_number < 2:
-        raise ValueError("At least two frames are required for optical flow")
+        raise ValueError("At least two frames are required for motion tracking")
     # Keep at most four evenly spaced comparison snapshots.
     selected = [snapshots[i] for i in np.linspace(0, len(snapshots) - 1, min(4, len(snapshots)), dtype=int)]
-    cv2.imwrite(str(output / "preview.jpg"), selected[-1][1])
+    if best_preview is not None:
+        # Preserve temporal ordering and include a frame with real long trails.
+        selected = sorted([*selected[:2], best_preview, selected[-1]], key=lambda item: item[0])
+    cv2.imwrite(str(output / "preview.jpg"), (best_preview or selected[-1])[1])
     cv2.imwrite(str(output / "contact_sheet.jpg"), np.vstack([image for _, image in selected]))
     candidates = sorted(tracker.history, key=lambda i: (len(tracker.history[i]), -i), reverse=True)
     # Deterministic long-lived tracks with spatially separated starting pixels.
@@ -253,17 +272,21 @@ def run(video, output, config, max_frames=0, max_width=960, overwrite=False):
                "median_fb_error_px": float(np.median(fb_errors)) if fb_errors else None,
                "parameters": asdict(config), "examples": examples,
                "note": "Image-plane pixel tracks, not 3D camera/vehicle motion. Time uses nominal CFR frame/fps."}
+    if best_preview is not None:
+        summary["preview_frame"] = best_preview[0]
+    if hasattr(tracker, "write_diagnostics"):
+        summary.update(tracker.write_diagnostics(output))
     (output / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-    template = (ROOT / "report_template.html").read_text(encoding="utf-8")
+    template = (report_template or ROOT / "report_template.html").read_text(encoding="utf-8")
     (output / "index.html").write_text(template.replace("__SUMMARY_JSON__", json.dumps(summary, ensure_ascii=False).replace("<", "\\u003c")), encoding="utf-8")
-    (output / "trajectories.svg").write_text(trajectory_svg(examples, width, height), encoding="utf-8")
+    (output / "trajectories.svg").write_text(trajectory_svg(examples, width, height, label), encoding="utf-8")
     return summary
 
 
-def trajectory_svg(examples, width, height):
-    elements = [f'<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="640" viewBox="0 0 1000 640" role="img" aria-label="Selected LK pixel trajectories in image coordinates">',
+def trajectory_svg(examples, width, height, label="LK"):
+    elements = [f'<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="640" viewBox="0 0 1000 640" role="img" aria-label="Selected pixel trajectories in image coordinates">',
                 '<rect width="1000" height="640" fill="#0c1524"/>',
-                '<text x="70" y="32" fill="#e3edf8" font-family="sans-serif" font-size="20">LK pixel tracks | x right, y down | circles = start</text>',
+                f'<text x="70" y="32" fill="#e3edf8" font-family="sans-serif" font-size="20">{label} pixel tracks | x right, y down | circles = start</text>',
                 '<rect x="70" y="65" width="860" height="500" fill="none" stroke="#42556c"/>']
     for tick in range(6):
         x = 70 + tick / 5 * 860

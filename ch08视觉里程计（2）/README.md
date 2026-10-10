@@ -1,6 +1,8 @@
-# ch08 视觉里程计（2）：LK 光流行车 demo
+# ch08 视觉里程计（2）：光流与直接对齐行车 demo
 
 使用 OpenCV 的稀疏金字塔 Lucas-Kanade 光流，跟踪一段真实行车视频中的纹理角点，导出像素轨迹和可播放的对比视频。无需 GPU、相机内参或训练权重。
+
+本章另包含[直接法 demo](#直接法-demo道路平面光度对齐)：复用同一段行车视频，自行实现光度误差、雅可比与阻尼高斯牛顿，联合估计道路平面的单应变换，再可视化道路像素的模型投影轨迹。两种 demo 都是二维像素实验，不是三维车辆轨迹估计。
 
 ## 运行
 
@@ -73,3 +75,81 @@ cd 'ch08视觉里程计（2）'
 测试覆盖已知 3 px / 2 px 平移、无纹理 / 空点集、失效 ID 不复用、短视频编码与 CSV / 页面输出，以及避免误覆盖结果。
 
 参考：[OpenCV 光流教程](https://docs.opencv.org/4.x/d4/dee/tutorial_optical_flow.html)、[Udacity 行车视频来源](https://github.com/udacity/CarND-LaneLines-P1)。
+
+## 直接法 demo：道路平面光度对齐
+
+### 运行与预览
+
+复用上面的依赖、`ffmpeg` 和 `.cache/solidWhiteRight.mp4`；不需要额外权重。仓库根目录运行：
+
+```bash
+/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/run_direct_demo.py' --download-demo
+/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/serve_results.py' \
+  --directory 'ch08视觉里程计（2）/results/driving_direct' --port 8770
+```
+
+打开 `http://127.0.0.1:8770`，可慢放对比视频、切换代表道路探针、查看图像平面轨迹与 x/y 时间曲线、跳到该点起始时刻。输出在 `results/driving_direct/`，同样不纳入 Git。使用自己的恒定帧率视频时传入 `--video /path/to/video.mp4`，但必须检查/调整 `direct_alignment.py` 中的人工道路 ROI，不能直接把此道路模型用于任意视频。
+
+```bash
+/path/to/lk-venv/bin/python 'ch08视觉里程计（2）/run_direct_demo.py' \
+  --video /path/to/driving.mp4 --output /path/to/direct-results \
+  --max-frames 300 --max-width 960 --max-points 100
+```
+
+`--max-frames 0` 处理全片；重跑同一输出目录须传 `--overwrite`。CSV 坐标与单应矩阵均属于缩放后的处理图像。
+
+| 文件 | 内容 |
+| --- | --- |
+| `direct_tracks.mp4` | 左原图、右道路探针投影及近期尾迹；空心点表示尚未存活三帧的新探针 |
+| `preview.jpg`、`contact_sheet.jpg` | 轨迹预览和带时间标注的快照；预览选择实际累计尾迹较长的帧 |
+| `index.html`、`trajectories.svg` | 交互报告及六条空间分散的代表轨迹 |
+| `photometric_alignment.jpg` | 参考图、当前图、对齐图与同尺度光度误差图；黄色道路 ROI、重叠区域 MAE |
+| `observations.csv` | 独立 track ID、位置、逐帧位移、正反向一致性和 7×7 光度 MAE |
+| `frame_homographies.csv` | 上一帧 → 当前帧的 3×3 单应矩阵与质量门限状态 |
+| `alignment_diagnostics.json` | 正反向各金字塔层的 Huber 目标值迭代日志及质量检查 |
+| `summary.json` | 来源校验、参数、统计和代表轨迹 |
+
+### 直接优化了什么
+
+在人工指定的静态、近似平面道路区域，上一帧像素 `p` 经一个共享单应矩阵 `H` 映射到当前帧，齐次坐标需除以第三分量。目标是：
+
+```text
+H* = argmin_H Σ_p ρ( I_current(W_H(p)) - I_previous(p) )
+p_current = W_H(p_previous)
+```
+
+`ρ` 为 Huber 损失；灰度归一化到 `[0,1]`，阈值 0.03。优化器在道路 ROI 的高梯度像素上采样，不需要先匹配两帧特征点。
+
+1. 灰度图、道路梯形 ROI，图像金字塔默认 `levels=3`（含原图，共最多四层）。
+2. 用上一帧变换和少量向内/向外的透视扩张候选做光度初始化，降低车道线沿线方向的局部极小问题。候选中心为图像宽的 0.5、高的 0.55，**只是本视频的初始化启发式，不是相机内参或测得的消失点**。
+3. 每层计算当前图像的梯度、双线性采样及光度残差。单应矩阵固定 `h22=1`，优化其余 8 个参数；图像坐标归一化以改善数值条件。
+4. 链式法则构造 `J = 图像梯度 × 单应投影雅可比`，Huber 加权，解阻尼法方程求增量。候选步须降低同一批有效样本的目标值，再更新矩阵；从粗到细迭代。优化采样留有边界余量，避免即将出图的道路像素阻止正确的外扩步骤。
+5. 正反向各直接对齐一次，反向 ROI 为正向道路区域的投影。质量检查要求至少 65% 道路网格可见、至少 65% 可见点光度误差 <25，以及第 95 百分位帧间位移 <90 px；欠纹理/秩不足时拒绝对齐。
+6. 用 Shi-Tomasi 只选择显示用的道路探针，不做跨帧特征匹配。将探针共同通过 `H` 投影；前后向距离 ≤1.5 px、7×7 完整投影图像块 MAE ≤25 且在图内才保留。每 10 帧或全部失效时补点，旧 ID 不复用。探针的数量不决定用于优化的光度采样数量（默认最多 3500 个）。
+
+核心求解器在 `direct_alignment.py`，入口为 `run_direct_demo.py`；下载、视频编码和通用可视化复用 `run_lk_demo.py` 的输出管线。**直接求解没有调用 `calcOpticalFlowPyrLK`、`findTransformECC`、特征匹配或 `findHomography`。**
+
+### 和 LK、书中的直接法有何区别
+
+LK 和直接对齐都可以基于亮度残差与局部线性化，不能仅靠“用了光度误差”区分它们。这里与之前 LK demo 的差异在于：之前逐个点求局部二维位移；这里联合求一个全局道路单应，所有探针服从同一模型，**不是互相独立测量出的像素运动**。
+
+这段原视频没有随附标定和深度。书中基于 3D 点、相机内参、`SE(3)` 位姿的直接法无法仅凭这些帧原样运行，所以本实验明确选用二维平面直接图像对齐；不伪造内参/深度，不输出三维位姿、米制距离或车速。前车、护栏、树木、坡道及非平面路面并不满足同一个道路模型。
+
+### 本机实测与限制
+
+默认参数、原片 221 帧 / 25 FPS / 8.84 秒 / 960×540：220 个帧间对齐通过质量门限，平均活跃探针 13.21，累计 2032 个 ID，最长连续轨迹 31 帧（首尾跨度 1.20 秒）。门限通过不等于几何真值准确；平坦路面使全 ROI 平均光度误差容易较低。新点和短轨迹较多，不应将它们拼接为长轨迹或据此声称精确的视觉里程计。
+
+第 99→100 帧诊断图，在同一可见重叠道路 ROI 上，灰度绝对误差 MAE 从 2.55 降到 1.99（范围 0–255）。这只是该帧对的光度改进，不是像素跟踪真值误差。完整迭代日志可复查实际目标值变化。
+
+低纹理、车道线的孔径歧义、遮挡、光照变化、曝光变化及模型偏差都会让直接法不稳定；需要靠谱的初始化和失败检查。特定道路 ROI 与初始化候选使本脚本是学习 demo，不是通用直接 SLAM 系统。
+
+### 验证
+
+```bash
+cd 'ch08视觉里程计（2）'
+/path/to/lk-venv/bin/python -m unittest -v test_lk_demo.py test_direct_demo.py
+```
+
+共 11 项测试，包括已知平移/单应运动、真实双线性采样、各层目标值不增加、无纹理和单方向纹理退化拒绝、输入尺寸检查、丢失 ID 不复用、视频/CSV/页面/迭代日志输出和防止误覆盖。直接法端到端测试将 OpenCV LK、ECC、几何单应估计接口替换为会报错的桩，确认没有走这些求解捷径。
+
+参考：[Baker & Matthews，参数化图像对齐与高斯牛顿](https://www.ri.cmu.edu/pub_files/pub3/baker_simon_2004_1/baker_simon_2004_1.pdf)、[十四讲作者的 RGB-D 直接法示例](https://github.com/gaoxiang12/slambook/blob/master/ch8/directMethod/direct_sparse.cpp)。
