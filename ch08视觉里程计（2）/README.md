@@ -1,4 +1,39 @@
-# ch08 视觉里程计（2）：光流与直接对齐行车 demo
+# ch08 视觉里程计（2）：学习总结与行车 demo
+
+[阅读本章总结 PDF](ch08视觉里程计（2）总结.pdf)
+
+总结共五页：LK 亮度不变假设与最小二乘、迭代 / 金字塔和轨迹检查、SE(3) 直接法的反投影与光度优化、雅可比与可观测性、同一行车视频的两个仓库实验。延续前几章的概念主线、公式提示、对比表与工程边界，并结合具身训练数据的验收需求。
+
+特别澄清：窗口内近似相同的是运动而不是灰度；二维像素尾迹不等于三维位姿；均匀白墙仍缺乏运动约束；位姿更新应包含透视除法中深度的变化；金字塔和误差下降不保证全局最优。
+
+## 阅读材料与文档生成
+
+本机 `Downloads/ch08视觉里程计（2）/` 中全部 19 张 JPG 已逐一阅读；截至此次整理，目录没有独立 TXT、RTF、Markdown 等笔记文本，图片中的文字和公式即为主要学习材料。没有将课堂原图上传仓库。
+
+| 图片文件 | 内容 |
+| --- | --- |
+| `20261010-115600.jpg`、`20261010-115605.jpg` | 第八讲标题、光流与直接法学习目标 |
+| `20261010-115609.jpg`、`20261010-115613.jpg` | 特征点法 VO 的流程、免描述子匹配的两种思路 |
+| `20261010-115617.jpg`、`20261010-115621.jpg` | 稀疏 / 稠密光流、像素运动与灰度恒常假设 |
+| `20261010-115625.jpg`、`20261010-115628.jpg`、`20261010-115631.jpg` | Taylor 展开、窗口最小二乘、迭代与金字塔 |
+| `20261010-115635.jpg` | LK 光流实践章节标题 |
+| `20261010-115638.jpg`、`20261010-115642.jpg`、`20261010-115645.jpg` | 直接法标题、相机几何动机、两帧投影关系 |
+| `20261010-115649.jpg`、`20261010-115652.jpg`、`20261010-115655.jpg` | 光度残差、位姿扰动、雅可比链式法则 |
+| `20261010-115658.jpg` | 图像梯度、稀疏 / 半稠密 / 稠密直接法 |
+| `20261010-115702.jpg`、`20261010-115705.jpg` | 局部优化与非凸性、直接法优缺点 |
+
+`generate_summary_pdf.py` 包含全文，`summary_assets/` 保留已有 demo 的两张实验快照。重新生成不依赖 Downloads 材料、视频缓存或 `results/`；快照来源和许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+```bash
+python3 -m pip install reportlab
+python3 'ch08视觉里程计（2）/generate_summary_pdf.py'
+```
+
+默认使用 macOS 的 Arial Unicode 字体；其他环境传入 `--font /path/to/chinese-font.ttf`，也可用 `--output /path/to/summary.pdf` 指定输出。
+
+核对资料：[OpenCV 光流教程](https://docs.opencv.org/4.x/d4/dee/tutorial_optical_flow.html)、[Baker & Matthews 图像对齐](https://www.ri.cmu.edu/pub_files/pub3/baker_simon_2004_1/baker_simon_2004_1.pdf)、[十四讲作者的 RGB-D 直接法示例](https://github.com/gaoxiang12/slambook/blob/master/ch8/directMethod/direct_sparse.cpp)、[DSO 作者说明](https://cvg.cit.tum.de/research/vslam/dso)。
+
+## 行车 demo 概览
 
 使用 OpenCV 的稀疏金字塔 Lucas-Kanade 光流，跟踪一段真实行车视频中的纹理角点，导出像素轨迹和可播放的对比视频。无需 GPU、相机内参或训练权重。
 
@@ -47,7 +82,7 @@ python3 -m venv /path/to/lk-venv
 | `summary.json` | 参数、视频校验、跟踪统计和代表轨迹 |
 | `index.html` | 无外部依赖的本地可视化页面 |
 
-输入缓存和生成结果均被 `.gitignore` 排除；运行脚本即可复现，不会自动上传视频或结果。
+输入缓存和 `results/` 生成结果均被 `.gitignore` 排除；运行脚本即可复现，不会自动上传视频或结果。仅本章总结选用的两张静态实验快照保存在 `summary_assets/`，随 PDF 和生成器提交。
 
 ## 算法主线
 

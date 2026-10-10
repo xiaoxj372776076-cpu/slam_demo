@@ -4,7 +4,8 @@
 
 - 固定提交：`ce5681be7ef8140560c0e464ef2da611e40b4fc9`
 - SHA-256：`2d8e14b46fe89afbc8ad1f718685cf09b83e85a324095031c38186a9f0535417`
-- 源仓库采用 [MIT License](https://github.com/udacity/CarND-LaneLines-P1/blob/ce5681be7ef8140560c0e464ef2da611e40b4fc9/LICENSE)。本 demo 不额外声称对视频拥有版权；输入视频和衍生结果仅在本机缓存，不自动提交或上传。
+- 源仓库采用 [MIT License](https://github.com/udacity/CarND-LaneLines-P1/blob/ce5681be7ef8140560c0e464ef2da611e40b4fc9/LICENSE)。本 demo 不额外声称对视频拥有版权；输入视频与 `results/` 下的完整衍生结果仅在本机缓存，不自动提交或上传。
+- 本章学习总结保留两张衍生实验快照：`summary_assets/lk_preview.jpg`（原片第 200 帧，8.00 s）和 `summary_assets/direct_preview.jpg`（原片第 75 帧，3.00 s）。快照左侧为原视频画面，右侧增加本仓库算法算得的像素轨迹；它们嵌入本章 PDF，并连同本许可声明发布。原始课堂截图不包含在仓库中。
 - 以下保留源仓库许可声明。
 
 MIT License
